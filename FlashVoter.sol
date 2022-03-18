@@ -14,25 +14,41 @@ contract FlashVoter {
     uint public proposalId;
 
     constructor(Govern _governanceToken, uint _proposalId) {
-        
         governanceToken = _governanceToken;
-        
         proposalId = _proposalId;
+    }
+
+    /*Inside of the flashVote function,
+    we call the flashloan function on the pool and borrow 100k DAI (borrowAmount).*/
+    function flashVote() external {
+        address[] memory assets = new address[](1);
+        assets[0] = address(DAI);
+
+        uint[] memory amounts = new uint[](1);
+        amounts[0] = borrowAmount;
+
+        uint[] memory modes = new uint[](1);
+        modes[0] = 0;
+    
+        pool.flashLoan(address(this), assets, amounts, modes, address(this), "", 0);
     
     }
 
-    function flashVote() external {
-        
-    }
-
+    /*When we kick off an AAVE flash loan in the flashVote function,
+    this will callback executeOperation function.
+    
+    We want to make sure that this flash loan executes successfully,
+    then we have to repay the loan amount plus the premiums for those loans.*/
     function executeOperation(
         address[] calldata,
         uint256[] calldata amounts,
         uint256[] calldata premiums,
         address, bytes calldata
     ) external returns(bool) {
-        
+
+        uint totalOwed = amounts[0] + premiums[0];
+        DAI.approve(address(pool), totalOwed);
+
+        return true;
     }
 }
-
-
